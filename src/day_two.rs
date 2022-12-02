@@ -115,7 +115,7 @@ fn parse_desired_outcomes(input: &str) -> IResult<&str, Vec<(Choice, Outcome)>> 
         value(Choice::Scissors, char('C')),
     ));
 
-    let my_choice = alt((
+    let desired_outcome = alt((
         value(Outcome::Lose, char('X')),
         value(Outcome::Draw, char('Y')),
         value(Outcome::Win, char('Z')),
@@ -123,7 +123,7 @@ fn parse_desired_outcomes(input: &str) -> IResult<&str, Vec<(Choice, Outcome)>> 
 
     separated_list1(
         newline,
-        separated_pair(opponent_choice, char(' '), my_choice),
+        separated_pair(opponent_choice, char(' '), desired_outcome),
     )(input)
 }
 
