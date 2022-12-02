@@ -1,29 +1,42 @@
-use std::{fs::read_to_string, cmp::Ordering};
+use std::{cmp::Ordering, fs::read_to_string};
 
 use nom::{
-    character::{complete::newline, complete::char },
-    character::complete::u32 as parse_u32,
-    combinator::{map, value},
-    multi::{count, separated_list1},
-    IResult, branch::alt, bytes::complete::tag, sequence::separated_pair,
+    branch::alt,
+    character::{complete::char, complete::newline},
+    combinator::value,
+    multi::separated_list1,
+    sequence::separated_pair,
+    IResult,
 };
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum Choice {
     Rock,
     Paper,
     Scissors,
 }
 
+impl Choice {
+    fn wins_to(&self) -> Self {
+        match self {
+            Self::Rock => Self::Scissors,
+            Self::Paper => Self::Rock,
+            Self::Scissors => Self::Paper,
+        }
+    }
+
+    fn loses_to(&self) -> Self {
+        match self {
+            Self::Rock => Self::Paper,
+            Self::Paper => Self::Scissors,
+            Self::Scissors => Self::Rock,
+        }
+    }
+}
+
 impl Ord for Choice {
     fn cmp(&self, other: &Self) -> Ordering {
-        let is_winner = match self {
-            Self::Rock => *other == Self::Scissors,
-            Self::Paper => *other == Self::Rock,
-            Self::Scissors => *other == Self::Paper,
-        };
-
-        if is_winner {
+        if self.wins_to() == *other {
             Ordering::Greater
         } else if self == other {
             Ordering::Equal
@@ -39,7 +52,14 @@ impl PartialOrd for Choice {
     }
 }
 
-fn score_round(round: &(Choice, Choice)) -> u32 {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Outcome {
+    Win,
+    Lose,
+    Draw,
+}
+
+fn score_round(round: (Choice, Choice)) -> u32 {
     let (opponents_choice, my_choice) = round;
 
     let choice_score = match my_choice {
@@ -48,7 +68,7 @@ fn score_round(round: &(Choice, Choice)) -> u32 {
         Choice::Scissors => 3,
     };
 
-    let result_score = match my_choice.cmp(opponents_choice) {
+    let result_score = match my_choice.cmp(&opponents_choice) {
         Ordering::Less => 0,
         Ordering::Equal => 3,
         Ordering::Greater => 6,
@@ -57,7 +77,19 @@ fn score_round(round: &(Choice, Choice)) -> u32 {
     choice_score + result_score
 }
 
-fn parse_input(input: &str) -> IResult<&str, Vec<(Choice, Choice)>> {
+fn apply_strategy(round: (Choice, Outcome)) -> (Choice, Choice) {
+    let (opponent_choice, desired_outcome) = round;
+
+    let my_choice = match desired_outcome {
+        Outcome::Win => opponent_choice.loses_to(),
+        Outcome::Lose => opponent_choice.wins_to(),
+        Outcome::Draw => opponent_choice.clone(),
+    };
+
+    (opponent_choice, my_choice)
+}
+
+fn parse_rounds(input: &str) -> IResult<&str, Vec<(Choice, Choice)>> {
     let opponent_choice = alt((
         value(Choice::Rock, char('A')),
         value(Choice::Paper, char('B')),
@@ -70,41 +102,71 @@ fn parse_input(input: &str) -> IResult<&str, Vec<(Choice, Choice)>> {
         value(Choice::Scissors, char('Z')),
     ));
 
-    separated_list1(newline,
-    separated_pair(opponent_choice, char(' '), my_choice))(input)
+    separated_list1(
+        newline,
+        separated_pair(opponent_choice, char(' '), my_choice),
+    )(input)
+}
+
+fn parse_desired_outcomes(input: &str) -> IResult<&str, Vec<(Choice, Outcome)>> {
+    let opponent_choice = alt((
+        value(Choice::Rock, char('A')),
+        value(Choice::Paper, char('B')),
+        value(Choice::Scissors, char('C')),
+    ));
+
+    let my_choice = alt((
+        value(Outcome::Lose, char('X')),
+        value(Outcome::Draw, char('Y')),
+        value(Outcome::Win, char('Z')),
+    ));
+
+    separated_list1(
+        newline,
+        separated_pair(opponent_choice, char(' '), my_choice),
+    )(input)
 }
 
 fn part_one(rounds: &Vec<(Choice, Choice)>) -> u32 {
-    rounds.iter().map(score_round).sum()
+    rounds.iter().copied().map(score_round).sum()
 }
 
-fn part_two(elves: &Vec<(Choice, Choice)>) -> u32 {
-    todo!()
+fn part_two(rounds: &Vec<(Choice, Outcome)>) -> u32 {
+    rounds
+        .iter()
+        .copied()
+        .map(apply_strategy)
+        .map(score_round)
+        .sum()
 }
 
 pub fn run() {
     let input = read_to_string("./inputs/day2.txt").unwrap();
-    let (_, rounds) = parse_input(input.as_str()).unwrap();
+    let (_, rounds) = parse_rounds(input.as_str()).unwrap();
 
     println!("Day 2:");
     let total_score = part_one(&rounds);
     println!("Part one: {total_score}");
+
+    let (_, rounds) = parse_desired_outcomes(input.as_str()).unwrap();
+    let total_score = part_two(&rounds);
+    println!("Part two: {total_score}");
 }
 
 #[cfg(test)]
 mod test {
-    use super::Choice;
+    use super::{Choice, Outcome};
     use indoc::indoc;
 
     #[test]
-    fn parse_input() {
+    fn parse_rounds() {
         let input = indoc! {"
             A Y
             B X
             C Z
         "};
 
-        let (_, rounds) = super::parse_input(input).unwrap();
+        let (_, rounds) = super::parse_rounds(input).unwrap();
         assert_eq!(
             rounds,
             vec![
@@ -116,17 +178,44 @@ mod test {
     }
 
     #[test]
+    fn parse_desired_outcomes() {
+        let input = indoc! {"
+            A Y
+            B X
+            C Z
+        "};
+
+        let (_, rounds) = super::parse_desired_outcomes(input).unwrap();
+        assert_eq!(
+            rounds,
+            vec![
+                (Choice::Rock, Outcome::Draw),
+                (Choice::Paper, Outcome::Lose),
+                (Choice::Scissors, Outcome::Win),
+            ]
+        );
+    }
+
+    #[test]
     fn score_round() {
-        assert_eq!(super::score_round(&(Choice::Rock, Choice::Paper)), 8);
-        assert_eq!(super::score_round(&(Choice::Paper, Choice::Rock)), 1);
-        assert_eq!(super::score_round(&(Choice::Scissors, Choice::Scissors)), 6);
+        assert_eq!(super::score_round((Choice::Rock, Choice::Paper)), 8);
+        assert_eq!(super::score_round((Choice::Paper, Choice::Rock)), 1);
+        assert_eq!(super::score_round((Choice::Scissors, Choice::Scissors)), 6);
     }
 
     #[test]
-    fn part_one() {
-    }
-
-    #[test]
-    fn part_two() {
+    fn apply_strategy() {
+        assert_eq!(
+            super::apply_strategy((Choice::Rock, Outcome::Win)),
+            (Choice::Rock, Choice::Paper)
+        );
+        assert_eq!(
+            super::apply_strategy((Choice::Paper, Outcome::Draw)),
+            (Choice::Paper, Choice::Paper)
+        );
+        assert_eq!(
+            super::apply_strategy((Choice::Scissors, Outcome::Lose)),
+            (Choice::Scissors, Choice::Paper)
+        );
     }
 }
