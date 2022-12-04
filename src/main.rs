@@ -3,9 +3,11 @@ use std::{collections::HashMap, fmt::Display, fs::read_to_string};
 use clap::Parser;
 use itertools::Itertools;
 
+mod day_four;
 mod day_one;
 mod day_three;
 mod day_two;
+
 mod limit_heap;
 
 trait SolutionRunner {
@@ -53,8 +55,12 @@ struct Args {
 }
 
 fn main() {
-    let solutions =
-        create_solution_map([&day_one::Solution, &day_two::Solution, &day_three::Solution]);
+    let solutions = create_solution_map([
+        &day_one::Solution,
+        &day_two::Solution,
+        &day_three::Solution,
+        &day_four::Solution,
+    ]);
 
     let args = Args::parse();
 
