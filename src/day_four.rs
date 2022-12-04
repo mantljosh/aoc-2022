@@ -24,15 +24,20 @@ fn parse(input: &str) -> IResult<&str, Vec<Pair>> {
     )(input)
 }
 
+
 fn fully_overlaps(a: &Assignment, b: &Assignment) -> bool {
     a.contains(b.start()) && a.contains(b.end()) || b.contains(a.start()) && b.contains(a.end())
+}
+
+fn partially_overlaps(a: &Assignment, b: &Assignment) -> bool {
+    a.contains(b.start()) || a.contains(b.end()) || b.contains(a.start()) || b.contains(a.end())
 }
 
 pub struct Solution;
 impl crate::Solution for Solution {
     const DAY: usize = 4;
     type O1 = usize;
-    type O2 = u32;
+    type O2 = usize;
 
     fn part_one(input: &str) -> Self::O1 {
         let (_, pairs) = parse(input).expect("Failed to parse assignment pairs");
@@ -41,7 +46,9 @@ impl crate::Solution for Solution {
     }
 
     fn part_two(input: &str) -> Self::O2 {
-        todo!()
+        let (_, pairs) = parse(input).expect("Failed to parse assignment pairs");
+
+        pairs.iter().filter(|(a, b)| partially_overlaps(a, b)).count()
     }
 }
 
@@ -88,6 +95,30 @@ mod test {
         );
         assert_eq!(
             super::fully_overlaps(&RangeInclusive::new(1, 2), &RangeInclusive::new(4, 5)),
+            false
+        );
+    }
+
+    #[test]
+    fn partially_overlaps() {
+        assert_eq!(
+            super::partially_overlaps(&RangeInclusive::new(2, 8), &RangeInclusive::new(3, 7)),
+            true
+        );
+        assert_eq!(
+            super::partially_overlaps(&RangeInclusive::new(2, 8), &RangeInclusive::new(3, 8)),
+            true
+        );
+        assert_eq!(
+            super::partially_overlaps(&RangeInclusive::new(2, 8), &RangeInclusive::new(3, 9)),
+            true
+        );
+        assert_eq!(
+            super::partially_overlaps(&RangeInclusive::new(2, 8), &RangeInclusive::new(1, 7)),
+            true
+        );
+        assert_eq!(
+            super::partially_overlaps(&RangeInclusive::new(1, 2), &RangeInclusive::new(4, 5)),
             false
         );
     }
