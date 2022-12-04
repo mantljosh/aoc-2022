@@ -1,34 +1,31 @@
-use std::{cmp::Ordering, collections::HashSet, fs::read_to_string};
-
-use nom::{
-    branch::alt,
-    character::{complete::char, complete::newline},
-    combinator::value,
-    multi::separated_list1,
-    sequence::separated_pair,
-    IResult,
-};
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum Choice {
-    Rock,
-    Paper,
-    Scissors,
-}
-
+use itertools::Itertools;
+use std::{collections::HashSet, fs::read_to_string, hash::Hash};
 
 fn get_duplicate_item(input: &str) -> Option<char> {
     let (left, right) = input.split_at(input.len() / 2);
-    let left_items = left.chars().collect::<HashSet<_>>();
-    right.chars().filter(|c| left_items.contains(c)).next()
+    find_common_items([left.chars(), right.chars()])
+        .into_iter()
+        .next()
 }
 
 fn get_item_priority(input: char) -> Option<u8> {
     match input {
         'a'..='z' => Some(input as u8 - b'a' + 1),
         'A'..='Z' => Some(input as u8 - b'A' + 27),
-        _ => None
+        _ => None,
     }
+}
+
+fn find_common_items<I, T>(bags: impl IntoIterator<Item = I>) -> HashSet<T>
+where
+    HashSet<T>: FromIterator<T>,
+    I: IntoIterator<Item = T>,
+    T: Eq + Hash + Clone,
+{
+    bags.into_iter()
+        .map(FromIterator::from_iter)
+        .reduce(|acc: HashSet<T>, bag| acc.intersection(&bag).cloned().collect())
+        .unwrap_or_default()
 }
 
 fn part_one(input: &str) -> u32 {
@@ -40,8 +37,17 @@ fn part_one(input: &str) -> u32 {
         .sum()
 }
 
-fn part_two() -> u32 {
-    todo!();
+fn part_two(input: &str) -> u32 {
+    input
+        .lines()
+        .map(|line| line.chars().collect::<HashSet<char>>())
+        .chunks(3)
+        .into_iter()
+        .map(find_common_items)
+        .map(|common_items| common_items.into_iter().next().expect("No common items"))
+        .map(|i| get_item_priority(i).expect("Duplicate item does not have a defined priority"))
+        .map(u32::from)
+        .sum()
 }
 
 pub fn run() {
@@ -50,7 +56,10 @@ pub fn run() {
     println!("Day 3:");
 
     let priority_sum = part_one(input.as_str());
-    println!("Part one: {priority_sum}")
+    println!("Part one: {priority_sum}");
+
+    let priority_sum = part_two(input.as_str());
+    println!("Part two: {priority_sum}");
 }
 
 #[cfg(test)]
@@ -71,5 +80,18 @@ mod test {
     fn get_duplicate_item() {
         assert_eq!(super::get_duplicate_item("abcdef"), None);
         assert_eq!(super::get_duplicate_item("abcdea"), Some('a'));
+    }
+
+    #[test]
+    fn find_common_items() {
+        let groups = vec![
+            vec![1, 2, 3],
+            vec![2, 3, 4],
+            vec![3, 4, 5],
+        ];
+
+        let common_items = super::find_common_items(groups);
+        assert_eq!(common_items.len(), 1);
+        assert!(common_items.contains(&3));
     }
 }
