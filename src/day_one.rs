@@ -1,5 +1,3 @@
-use std::fs::read_to_string;
-
 use crate::limit_heap::LimitHeap;
 use nom::{
     character::complete::newline,
@@ -28,33 +26,32 @@ fn parse_input(input: &str) -> IResult<&str, Vec<Elf>> {
     separated_list1(count(newline, 2), elf)(input)
 }
 
-fn part_one(elves: &Vec<Elf>) -> u32 {
-    elves.iter().map(Elf::calories).max().unwrap_or_default()
-}
+pub struct Solution;
+impl crate::Solution for Solution {
+    const DAY: usize = 1;
+    type O1 = u32;
+    type O2 = u32;
 
-fn part_two(elves: &Vec<Elf>) -> u32 {
+    fn part_one(input: &str) -> Self::O1 {
+        let (_, elves) = parse_input(input).unwrap();
+        elves.iter().map(Elf::calories).max().expect("Input contained no elves")
+    }
+
+    fn part_two(input: &str) -> Self::O2 {
+        let (_, elves) = parse_input(input).unwrap();
     elves
         .iter()
         .map(Elf::calories)
         .collect::<LimitHeap<_, 3>>()
         .iter()
         .sum()
-}
-
-pub fn run() {
-    let input = read_to_string("./inputs/day1.txt").unwrap();
-    let (_, elves) = parse_input(input.as_str()).unwrap();
-
-    println!("Day one:");
-    let calories = part_one(&elves);
-    println!("The elf with the most calories has {calories} calories");
-
-    let calories = part_two(&elves);
-    println!("The top three elves have {calories} calories");
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::Solution;
+
     use super::Elf;
     use indoc::indoc;
 
@@ -88,28 +85,31 @@ mod test {
 
     #[test]
     fn part_one() {
-        let elves = vec![
-            Elf {
-                items: vec![100, 200],
-            },
-            Elf { items: vec![500] },
-        ];
+        let input = indoc! {"
+            100
+            200
 
-        assert_eq!(super::part_one(&elves), 500);
+            500
+        "};
+
+        assert_eq!(super::Solution::part_one(input), 500);
     }
 
     #[test]
     fn part_two() {
-        let elves = vec![
-            Elf {
-                items: vec![100, 200],
-            },
-            Elf { items: vec![500] },
-            Elf { items: vec![600] },
-            Elf { items: vec![700] },
-            Elf { items: vec![100] },
-        ];
+        let input = indoc! {"
+            100
+            200
 
-        assert_eq!(super::part_two(&elves), 1800);
+            500
+
+            600
+
+            700
+
+            100
+        "};
+
+        assert_eq!(super::Solution::part_two(input), 1800);
     }
 }

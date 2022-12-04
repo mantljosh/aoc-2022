@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fs::read_to_string};
+use std::{cmp::Ordering};
 
 use nom::{
     branch::alt,
@@ -127,32 +127,27 @@ fn parse_desired_outcomes(input: &str) -> IResult<&str, Vec<(Choice, Outcome)>> 
     )(input)
 }
 
-fn part_one(rounds: &Vec<(Choice, Choice)>) -> u32 {
-    rounds.iter().copied().map(score_round).sum()
+pub struct Solution;
+impl crate::Solution for Solution {
+    const DAY: usize = 2;
+    type O1 = u32;
+    type O2 = u32;
+
+    fn part_one(input: &str) -> Self::O1 {
+        let (_, rounds) = parse_rounds(input).unwrap();
+        rounds.iter().copied().map(score_round).sum()
+    }
+
+    fn part_two(input: &str) -> Self::O2 {
+        let (_, rounds) = parse_desired_outcomes(input).unwrap();
+        rounds
+            .iter()
+            .copied()
+            .map(apply_strategy)
+            .map(score_round)
+            .sum()
+    }
 }
-
-fn part_two(rounds: &Vec<(Choice, Outcome)>) -> u32 {
-    rounds
-        .iter()
-        .copied()
-        .map(apply_strategy)
-        .map(score_round)
-        .sum()
-}
-
-pub fn run() {
-    let input = read_to_string("./inputs/day2.txt").unwrap();
-    let (_, rounds) = parse_rounds(input.as_str()).unwrap();
-
-    println!("Day 2:");
-    let total_score = part_one(&rounds);
-    println!("Part one: {total_score}");
-
-    let (_, rounds) = parse_desired_outcomes(input.as_str()).unwrap();
-    let total_score = part_two(&rounds);
-    println!("Part two: {total_score}");
-}
-
 #[cfg(test)]
 mod test {
     use super::{Choice, Outcome};

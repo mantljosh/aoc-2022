@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::{collections::HashSet, fs::read_to_string, hash::Hash};
+use std::{collections::HashSet, hash::Hash};
 
 fn get_duplicate_item(input: &str) -> Option<char> {
     let (left, right) = input.split_at(input.len() / 2);
@@ -28,38 +28,33 @@ where
         .unwrap_or_default()
 }
 
-fn part_one(input: &str) -> u32 {
-    input
-        .lines()
-        .map(|s| get_duplicate_item(s).expect("Rucksack did not contain duplicate a duplicate"))
-        .map(|i| get_item_priority(i).expect("Duplicate item does not have a defined priority"))
-        .map(u32::from)
-        .sum()
-}
+pub struct Solution;
+impl crate::Solution for Solution {
+    const DAY: usize = 3;
+    type O1 = u32;
+    type O2 = u32;
 
-fn part_two(input: &str) -> u32 {
-    input
-        .lines()
-        .map(|line| line.chars().collect::<HashSet<char>>())
-        .chunks(3)
-        .into_iter()
-        .map(find_common_items)
-        .map(|common_items| common_items.into_iter().next().expect("No common items"))
-        .map(|i| get_item_priority(i).expect("Duplicate item does not have a defined priority"))
-        .map(u32::from)
-        .sum()
-}
+    fn part_one(input: &str) -> Self::O1 {
+        input
+            .lines()
+            .map(|s| get_duplicate_item(s).expect("Rucksack did not contain duplicate a duplicate"))
+            .map(|i| get_item_priority(i).expect("Duplicate item does not have a defined priority"))
+            .map(u32::from)
+            .sum()
+    }
 
-pub fn run() {
-    let input = read_to_string("./inputs/day3.txt").unwrap();
-
-    println!("Day 3:");
-
-    let priority_sum = part_one(input.as_str());
-    println!("Part one: {priority_sum}");
-
-    let priority_sum = part_two(input.as_str());
-    println!("Part two: {priority_sum}");
+    fn part_two(input: &str) -> Self::O2 {
+        input
+            .lines()
+            .map(|line| line.chars().collect::<HashSet<char>>())
+            .chunks(3)
+            .into_iter()
+            .map(find_common_items)
+            .map(|common_items| common_items.into_iter().next().expect("No common items"))
+            .map(|i| get_item_priority(i).expect("Duplicate item does not have a defined priority"))
+            .map(u32::from)
+            .sum()
+    }
 }
 
 #[cfg(test)]
@@ -84,11 +79,7 @@ mod test {
 
     #[test]
     fn find_common_items() {
-        let groups = vec![
-            vec![1, 2, 3],
-            vec![2, 3, 4],
-            vec![3, 4, 5],
-        ];
+        let groups = vec![vec![1, 2, 3], vec![2, 3, 4], vec![3, 4, 5]];
 
         let common_items = super::find_common_items(groups);
         assert_eq!(common_items.len(), 1);
