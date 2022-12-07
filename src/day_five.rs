@@ -77,7 +77,18 @@ impl crate::Solution for Solution {
     }
 
     fn part_two(input: &str) -> Self::O2 {
-        todo!()
+        let (_, (mut stacks, procedure)) = parse(input).unwrap();
+
+        for (quantity, from, to) in procedure {
+            let from_stack = &mut stacks[(from - 1) as usize];
+            let mut moved_items = from_stack.split_off(from_stack.len() - (quantity as usize));
+            stacks[(to - 1) as usize].append(&mut moved_items);
+        }
+
+        stacks
+            .iter()
+            .map(|column| column.last().unwrap_or(&' '))
+            .collect()
     }
 }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Display, fs::read_to_string};
+use std::{collections::HashMap, fmt::Display, fs::read_to_string, time::Instant};
 
 use clap::Parser;
 use itertools::Itertools;
@@ -8,6 +8,7 @@ mod day_two;
 mod day_three;
 mod day_four;
 mod day_five;
+mod day_six;
 
 mod limit_heap;
 
@@ -61,7 +62,8 @@ fn main() {
         &day_two::Solution,
         &day_three::Solution,
         &day_four::Solution,
-        &day_five::Solution
+        &day_five::Solution,
+        &day_six::Solution,
     ]);
 
     let args = Args::parse();
@@ -81,11 +83,15 @@ fn main() {
         let input = input.as_str();
 
         println!("Day {day}");
+        let start = Instant::now();
         let answer = solution.part_one(input);
-        println!("  Part one: {answer}");
+        let duration = start.elapsed().as_micros();
+        println!("  Part one: {answer} ({duration}us)");
 
+        let start = Instant::now();
         let answer = solution.part_two(input);
-        println!("  Part two: {answer}");
+        let duration = start.elapsed().as_micros();
+        println!("  Part two: {answer} ({duration}us)");
         println!()
     }
 }
