@@ -9,6 +9,7 @@ mod day_three;
 mod day_four;
 mod day_five;
 mod day_six;
+mod day_seven;
 
 mod limit_heap;
 
@@ -64,6 +65,7 @@ fn main() {
         &day_four::Solution,
         &day_five::Solution,
         &day_six::Solution,
+        &day_seven::Solution,
     ]);
 
     let args = Args::parse();
