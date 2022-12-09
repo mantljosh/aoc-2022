@@ -1,4 +1,4 @@
-use std::{collections::BinaryHeap, cmp::Reverse, iter::Map};
+use std::{cmp::Reverse, collections::BinaryHeap, iter::Map};
 
 pub struct LimitHeap<T: Ord, const N: usize>(BinaryHeap<Reverse<T>>);
 
@@ -14,13 +14,12 @@ impl<T: Ord, const N: usize> LimitHeap<T, N> {
         }
 
         match self.0.peek() {
-            Some(Reverse(smallest_value)) if smallest_value < &item  => {
+            Some(Reverse(smallest_value)) if smallest_value < &item => {
                 self.0.pop();
                 self.0.push(Reverse(item))
             }
             _ => {}
         }
-
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {

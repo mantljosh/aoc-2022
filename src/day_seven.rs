@@ -1,11 +1,9 @@
-use nom::branch::alt;
-use nom::character::complete::newline;
-use nom::combinator::opt;
 use nom::{
+    branch::alt,
     bytes::complete::tag,
-    character::complete::{char, line_ending, not_line_ending},
-    combinator::{map},
-    multi::{many0},
+    character::complete::{char, line_ending, newline, not_line_ending},
+    combinator::{map, opt},
+    multi::many0,
     sequence::{delimited, separated_pair, terminated, tuple},
     IResult,
 };
@@ -72,7 +70,7 @@ impl<'a> Filesystem<'a> {
     fn children(&self) -> impl Iterator<Item = &Filesystem> {
         let children = match self {
             Filesystem::Directory { children, .. } => Some(children),
-            _ => None
+            _ => None,
         };
 
         children.into_iter().flatten()

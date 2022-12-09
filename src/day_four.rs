@@ -24,7 +24,6 @@ fn parse(input: &str) -> IResult<&str, Vec<Pair>> {
     )(input)
 }
 
-
 fn fully_overlaps(a: &Assignment, b: &Assignment) -> bool {
     a.contains(b.start()) && a.contains(b.end()) || b.contains(a.start()) && b.contains(a.end())
 }
@@ -48,7 +47,10 @@ impl crate::Solution for Solution {
     fn part_two(input: &str) -> Self::O2 {
         let (_, pairs) = parse(input).expect("Failed to parse assignment pairs");
 
-        pairs.iter().filter(|(a, b)| partially_overlaps(a, b)).count()
+        pairs
+            .iter()
+            .filter(|(a, b)| partially_overlaps(a, b))
+            .count()
     }
 }
 

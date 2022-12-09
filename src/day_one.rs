@@ -1,7 +1,6 @@
 use crate::limit_heap::LimitHeap;
 use nom::{
-    character::complete::newline,
-    character::complete::u32 as parse_u32,
+    character::complete::{newline, u32 as parse_u32},
     combinator::map,
     multi::{count, separated_list1},
     IResult,
@@ -34,17 +33,21 @@ impl crate::Solution for Solution {
 
     fn part_one(input: &str) -> Self::O1 {
         let (_, elves) = parse_input(input).unwrap();
-        elves.iter().map(Elf::calories).max().expect("Input contained no elves")
+        elves
+            .iter()
+            .map(Elf::calories)
+            .max()
+            .expect("Input contained no elves")
     }
 
     fn part_two(input: &str) -> Self::O2 {
         let (_, elves) = parse_input(input).unwrap();
-    elves
-        .iter()
-        .map(Elf::calories)
-        .collect::<LimitHeap<_, 3>>()
-        .iter()
-        .sum()
+        elves
+            .iter()
+            .map(Elf::calories)
+            .collect::<LimitHeap<_, 3>>()
+            .iter()
+            .sum()
     }
 }
 

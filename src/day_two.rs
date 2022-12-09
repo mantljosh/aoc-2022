@@ -1,8 +1,8 @@
-use std::{cmp::Ordering};
+use std::cmp::Ordering;
 
 use nom::{
     branch::alt,
-    character::{complete::char, complete::newline},
+    character::complete::{char, newline},
     combinator::value,
     multi::separated_list1,
     sequence::separated_pair,
