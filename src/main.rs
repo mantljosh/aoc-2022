@@ -3,14 +3,15 @@ use std::{collections::HashMap, fmt::Display, fs::read_to_string, time::Instant}
 use clap::Parser;
 use itertools::Itertools;
 
-mod day_one;
-mod day_two;
-mod day_three;
-mod day_four;
-mod day_five;
-mod day_six;
-mod day_seven;
 mod day_eight;
+mod day_five;
+mod day_four;
+mod day_nine;
+mod day_one;
+mod day_seven;
+mod day_six;
+mod day_three;
+mod day_two;
 
 mod limit_heap;
 
@@ -68,6 +69,7 @@ fn main() {
         &day_six::Solution,
         &day_seven::Solution,
         &day_eight::Solution,
+        &day_nine::Solution,
     ]);
 
     let args = Args::parse();

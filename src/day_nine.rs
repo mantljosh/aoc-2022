@@ -1,7 +1,6 @@
-use std::{
-    collections::HashSet,
-    iter::{once, repeat},
-};
+use std::{collections::HashSet, iter::repeat};
+
+use std::iter::once;
 
 use itertools::Itertools;
 use nom::branch::alt;
