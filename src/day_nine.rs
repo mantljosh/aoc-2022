@@ -90,10 +90,16 @@ impl crate::Solution for Solution {
         let mut instructions = iterator(input, parse_instruction);
         let directions = instructions.flat_map(|(dir, count)| repeat(dir).take(count));
 
-        let mut tail: Box<dyn Iterator<Item = (i32, i32)>> = Box::new(head_positions(directions));
-        for _ in 0..9 {
-            tail = Box::new(follow_leader(tail));
-        }
+        let head = head_positions(directions);
+        let one = follow_leader(head);
+        let two = follow_leader(one);
+        let three = follow_leader(two);
+        let four = follow_leader(three);
+        let five = follow_leader(four);
+        let six = follow_leader(five);
+        let seven = follow_leader(six);
+        let eight = follow_leader(seven);
+        let tail = follow_leader(eight);
 
         tail.collect::<HashSet<_>>().len()
     }
