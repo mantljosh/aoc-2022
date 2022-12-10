@@ -1,3 +1,6 @@
+use std::iter::repeat;
+
+use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -38,7 +41,7 @@ pub struct Solution;
 impl crate::Solution for Solution {
     const DAY: usize = 10;
     type O1 = i32;
-    type O2 = i32;
+    type O2 = String;
 
     fn part_one(input: &str) -> Self::O1 {
         let mut instructions = iterator(input, parse_instruction);
@@ -50,7 +53,25 @@ impl crate::Solution for Solution {
     }
 
     fn part_two(input: &str) -> Self::O2 {
-        todo!()
+        let mut instructions = iterator(input, parse_instruction);
+        let sprite_positions = register_values(&mut instructions);
+        let ray_position = repeat(1..=40).flatten();
+
+        let pixels = sprite_positions
+            .zip(ray_position)
+            .map(|(sprite, ray)| {
+                if ray >= sprite && ray <= sprite + 2 {
+                    '#'
+                } else {
+                    ' '
+                }
+            })
+            .chunks(40)
+            .into_iter()
+            .map(|line| line.collect::<String>())
+            .join("\n");
+
+        format!("\n\n{pixels}\n\n")
     }
 }
 
