@@ -10,6 +10,7 @@ mod day_nine;
 mod day_one;
 mod day_seven;
 mod day_six;
+mod day_ten;
 mod day_three;
 mod day_two;
 
@@ -70,6 +71,7 @@ fn main() {
         &day_seven::Solution,
         &day_eight::Solution,
         &day_nine::Solution,
+        &day_ten::Solution,
     ]);
 
     let args = Args::parse();
