@@ -16,6 +16,22 @@ enum Instruction {
     Addx(i32),
 }
 
+impl Instruction {
+    fn cycles(&self) -> usize {
+        match self {
+            Instruction::Noop => 1,
+            Instruction::Addx(_) => 2,
+        }
+    }
+
+    fn apply(&self, register: &mut i32) {
+        match self {
+            Instruction::Noop => {},
+            Instruction::Addx(x) => *register += x,
+        }
+    }
+}
+
 fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
     let noop = value(Instruction::Noop, tag("noop"));
     let add = map(preceded(tag("addx "), nom::character::complete::i32), |x| {
@@ -26,15 +42,11 @@ fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
 
 fn register_values(instructions: impl Iterator<Item = Instruction>) -> impl Iterator<Item = i32> {
     instructions
-        .flat_map(|instruction| match instruction {
-            Instruction::Noop => vec![0],
-            Instruction::Addx(x) => vec![0, x],
-        })
         .scan(1, |x, instruction| {
-            let current = *x;
-            *x += instruction;
-            Some(current)
-        })
+            let current = *x; 
+            instruction.apply(x);
+            Some(repeat(current).take(instruction.cycles()))
+        }).flatten()
 }
 
 pub struct Solution;
