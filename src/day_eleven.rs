@@ -12,11 +12,11 @@ use nom::{
 #[derive(Clone, Copy, Debug)]
 enum Expression {
     Old,
-    Value(i32),
+    Value(i64),
 }
 
 impl Expression {
-    fn eval(&self, old: i32) -> i32 {
+    fn eval(&self, old: i64) -> i64 {
         match self {
             Expression::Old => old,
             Expression::Value(n) => *n,
@@ -31,22 +31,22 @@ enum Operation {
 }
 
 impl Operation {
-    fn apply(&self, old: i32) -> i32 {
+    fn apply(&self, old: i64) -> i64 {
         match self {
-            Operation::Add(a, b) => a.eval(old) + b.eval(old),
-            Operation::Multiply(a, b) => a.eval(old) * b.eval(old),
+            Operation::Add(a, b) => a.eval(old).checked_add(b.eval(old)).unwrap(),
+            Operation::Multiply(a, b) => a.eval(old).checked_mul(b.eval(old)).unwrap(),
         }
     }
 }
 
 struct Test {
-    divisor: i32,
+    divisor: i64,
     pass_dest: usize,
     fail_dest: usize,
 }
 
 impl Test {
-    fn get_destination(&self, value: i32) -> usize {
+    fn get_destination(&self, value: i64) -> usize {
         if value % self.divisor == 0 {
             self.pass_dest
         } else {
@@ -56,7 +56,7 @@ impl Test {
 }
 
 struct Monkey {
-    items: Vec<i32>,
+    items: Vec<i64>,
     operation: Operation,
     test: Test,
 }
@@ -64,7 +64,7 @@ struct Monkey {
 fn parse_expression(input: &str) -> IResult<&str, Expression> {
     alt((
         value(Expression::Old, tag("old")),
-        map(nom::character::complete::i32, |n| Expression::Value(n)),
+        map(nom::character::complete::i64, |n| Expression::Value(n)),
     ))(input)
 }
 
@@ -85,12 +85,12 @@ fn parse_operation(input: &str) -> IResult<&str, Operation> {
 fn parse_test(input: &str) -> IResult<&str, Test> {
     let divisor = delimited(
         tag("  Test: divisible by "),
-        nom::character::complete::i32,
+        nom::character::complete::i64,
         newline,
     );
 
-    let pass_dest = map_res(delimited(tag("    If true: throw to monkey "), nom::character::complete::u32, newline), usize::try_from);
-    let fail_dest = map_res(delimited(tag("    If false: throw to monkey "), nom::character::complete::u32, newline), usize::try_from);
+    let pass_dest = map_res(delimited(tag("    If true: throw to monkey "), nom::character::complete::u64, newline), usize::try_from);
+    let fail_dest = map_res(delimited(tag("    If false: throw to monkey "), nom::character::complete::u64, newline), usize::try_from);
 
     map(tuple((divisor, pass_dest, fail_dest)), |(divisor, pass_dest, fail_dest)| Test {
         divisor,
@@ -104,7 +104,7 @@ fn parse_monkey(input: &str) -> IResult<&str, Monkey> {
 
     let items = delimited(
         tag("  Starting items: "),
-        separated_list0(tag(", "), nom::character::complete::i32),
+        separated_list0(tag(", "), nom::character::complete::i64),
         newline,
     );
 
@@ -124,8 +124,8 @@ fn parse(input: &str) -> IResult<&str, Vec<Monkey>> {
 pub struct Solution;
 impl crate::Solution for Solution {
     const DAY: usize = 11;
-    type O1 = u32;
-    type O2 = u32;
+    type O1 = u64;
+    type O2 = u64;
 
     fn part_one(input: &str) -> Self::O1 {
         let (_, mut monkeys) = parse(input).unwrap();
@@ -134,7 +134,7 @@ impl crate::Solution for Solution {
         for _ in 0..20 {
             for i in 0..monkeys.len() {
                 let items = monkeys[i].items.split_off(0);
-                inspection_count[i] += items.len() as u32;
+                inspection_count[i] += items.len() as u64;
                 for item in items {
                     let new_item = monkeys[i].operation.apply(item) / 3;
                     let destination = monkeys[i].test.get_destination(new_item);
@@ -147,7 +147,24 @@ impl crate::Solution for Solution {
     }
 
     fn part_two(input: &str) -> Self::O2 {
-        todo!()
+        let (_, mut monkeys) = parse(input).unwrap();
+        let mut inspection_count = vec![0; monkeys.len()];
+
+        let modulus: i64 = monkeys.iter().map(|m| m.test.divisor).product();
+
+        for _ in 0..10000 {
+            for i in 0..monkeys.len() {
+                let items = monkeys[i].items.split_off(0);
+                inspection_count[i] += items.len() as u64;
+                for item in items {
+                    let new_item = monkeys[i].operation.apply(item) % modulus;
+                    let destination = monkeys[i].test.get_destination(new_item);
+                    monkeys[destination].items.push(new_item);
+                }
+            }
+        }
+
+        inspection_count.iter().sorted().rev().take(2).product()
     }
 }
 
